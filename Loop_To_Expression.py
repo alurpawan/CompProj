@@ -103,19 +103,23 @@ class Loop:							#Contains information about the loop
 					#print(self.loop_body[loc+1])
 					#print(loc == len(self.loop_body)-1)
 					#print(self.loop_body[loc+1].strip() != 'else')
+					
 					if loc == len(self.loop_body)-1 or self.loop_body[loc + 1].strip() != 'else':			#i is last line or next line IS NOT else:
-						print("Here")
+						#print("Here")		
 						create_CV()
 						else_flag = old_flag.pop()
 				if else_flag == 2:
 					#print(loc)
+					#print("Here")	
 					change_else_val()
 					create_CV()
+					#for i in SVar:
+					#	print(i.CurrVal)
 					else_flag = old_flag.pop()
 					#print(else_flag)
 			
 			else:												#Assignmnent
-				match_equals = '([\w\d_ ]+)=([\w\d<>=|&\(\)\[\]! ]+)'
+				match_equals = '([\w\d_ ]+)=([\w\d<>=|&\(\)\[\]!+-/\* ]+)'
 				match = re.search(match_equals,i)
 				if match:
 					var_name = match.group(1)
@@ -149,7 +153,7 @@ def get_loop_and_vars(content):		#Gets loop and also gets list of all variables
 		if (i.startswith('int ') or i.startswith('float ') or i.startswith('bool ') or i.startswith('char ')) and i is not content[0]:
 			tempvar = i[i.find(' ')+1:i.find('=')-1]
 			tempval = str(i[i.find('=')+2:i.find(';')])
-			new_var = Var(tempvar,tempval)
+			new_var = Var(tempvar,tempvar)
 			Variable.append(new_var)
 
 		if i.startswith("for(") or i.startswith("for ("):	#To get loop
@@ -182,7 +186,7 @@ def get_data_from_file(fname):
 
 def add_var_to_S(name):
 	for i in Variable:
-		if i.same_name(name):
+		if i.same_name(name) and i not in SVar:
 			SVar.append(i)			 #Checks the whole loop for System Variables and adds them to a list
 
 def push_CV():
@@ -192,8 +196,8 @@ def push_CV():
 
 def change_if_val():				#Called whenever an if loop ends, to save value from CV to if_loop 
 	for i in SVar:
-		i.if_loop.pop()
 		#print(i.CurrVal)
+		i.if_loop.pop()
 		i.if_loop.append(i.CurrVal)
 
 def create_CV():					#Used to convert if and else values to an if then else statement and store it in CV
@@ -205,9 +209,10 @@ def create_CV():					#Used to convert if and else values to an if then else stat
 		#print(if_val)
 		#print(else_val)
 		if if_val is not else_val:
-			final_cv = 'if ('+ cond + ') then {' + if_val + '} else {' + else_val + '}'
+			final_cv = 'if ( '+ cond + ' ) then { ' + if_val + ' } else { ' + else_val + ' }'
 			#print(final_cv)
 			i.CurrVal = final_cv
+			#print(i.CurrVal)
 		else:
 			i.CurrVal = if_val							 
 
@@ -228,13 +233,14 @@ def Main(arg1):
 	fname = arg1
 	content = get_data_from_file(fname)
 	loop = get_loop_and_vars(content)
-
+	
 	main_loop = Loop()
 	main_loop.get_loop_info(loop)
 	#main_loop.print_loop_body()
 	main_loop.get_SVar()
-
+	#print(len(SVar))
 	main_loop.create_Expression()
 	for i in SVar:
 		i.print_Val()
+	return SVar
 
